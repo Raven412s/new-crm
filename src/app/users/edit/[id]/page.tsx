@@ -1,6 +1,9 @@
 "use client";
 import UpdateUserForm from "@/components/client/forms/update-user-form/form";
 import { fetchUser, updateUser } from "@/services/users/user-service";
+import { EditUserFormInputs } from "@/types/users/user-type";
+import { onEditUserFormSubmit } from "@/utils/handlers/submit-handlers/functionList";
+import { editUserSchema } from "@/zod-schema/users/editUserSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -10,21 +13,15 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 // Define schema using Zod
-export const addUserSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  mobile: z.string().regex(/^\d{10}$/, "Invalid mobile number"),
-  role: z.enum(["user", "admin"]).optional(),
-});
 
-export type EditUserFormInputs = z.infer<typeof addUserSchema>;
+
 const EditUserForm = ({params}: {params: {id:string } }) => {
     const id = params.id;
   const router = useRouter();
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<EditUserFormInputs>({
-    resolver: zodResolver(addUserSchema),
+    resolver: zodResolver(editUserSchema),
   });
 
   // Fetch user data using React Query
@@ -57,9 +54,7 @@ const EditUserForm = ({params}: {params: {id:string } }) => {
     },
   });
 
-  const onSubmit = (data: EditUserFormInputs) => {
-    mutation.mutate(data);
-  };
+  const onSubmit = (data: EditUserFormInputs) => onEditUserFormSubmit({mutation,data});
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error: {error?.message}</p>;

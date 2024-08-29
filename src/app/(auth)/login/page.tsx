@@ -8,8 +8,9 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { auth, signIn } from "@/auth";
-import CredentialsLogin from "@/components/client/form";
+
 import { redirect } from "next/navigation";
+import CredentialsLogin from "@/components/client/forms/login-form/form";
 
 export default async function LoginForm() {
   const session = await auth();

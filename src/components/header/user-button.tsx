@@ -2,7 +2,8 @@ import React from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Button } from '../ui/button'
 import { CircleUser } from 'lucide-react'
-import { signOut } from '@/auth'
+import { auth, signOut } from '@/auth'
+import { redirect } from 'next/navigation'
 
 const UserButton = () => {
   return (
@@ -23,6 +24,8 @@ const UserButton = () => {
         <form action={async () => {
         "use server"
         await signOut()
+        const session = await auth()
+        if (!session?.user) {redirect("/login")}
       }}><Button type='submit' variant={'ghost'} className=''>Logout</Button></form>
       </DropdownMenuItem>
     </DropdownMenuContent>

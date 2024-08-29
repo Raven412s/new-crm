@@ -1,25 +1,15 @@
 "use client"
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-
-import { toast } from "sonner"; // Assuming you're using Sonner for toast notifications
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
-import { hash } from "bcryptjs";
+import { AddUserFormInputs } from "@/types/users/user-type";
+import { addUserSchema } from "@/zod-schema/users/addUserSchema";
+import { onAddUserFormSubmit } from "@/utils/handlers/submit-handlers/functionList";
 
-const addUserSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  mobile: z.string().regex(/^\d{10}$/, "Invalid mobile number"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["user", "admin"]).optional(),
-});
-
-type AddUserFormInputs = z.infer<typeof addUserSchema>;
 const AddUserForm = () => {
     const router = useRouter()
   const {
@@ -29,36 +19,7 @@ const AddUserForm = () => {
   } = useForm<AddUserFormInputs>({
     resolver: zodResolver(addUserSchema),
   });
-
-  const onSubmit = async (data: AddUserFormInputs) => {
-    try {
-        const hashedPassword = hash(data.password,10)
-      const formattedData = {
-        ...data,
-        password: (await hashedPassword).toString()
-      }
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formattedData),
-      });
-
-      if (response.ok) {
-        toast.success("User added successfully!");
-        // You can also redirect to a different page here
-        router.push("/users")
-
-      } else {
-        const errorData = await response.json();
-        toast.error(`Error: ${errorData.message}`);
-      }
-    } catch (error: any) {
-      toast.error(`Error: ${error.message}`);
-    }
-  };
-
+const onSubmit =(data: AddUserFormInputs)=> onAddUserFormSubmit(router,data)
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 m-5">
       <div>

@@ -16,6 +16,8 @@ import UserButton from "@/components/header/user-button";
 
 import TanstackProvider from "@/components/providers/tanstack-provider";
 import { ModeToggle } from "@/components/navbar/mode-toggle";
+import { User } from "@/types/users/user-type";
+import Header from "@/components/header/Header";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -32,20 +34,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-//   let user;
-//   try {
-//     const session = await auth();
-//     user = session?.user;
-//   } catch (error) {
-//     console.error("Failed to fetch user session:", error);
-//     redirect("/error");
-//     return null;
-//   }
 
-//   if (!user) {
-//     redirect("/login");
-//     return null;
-//   }
+
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -75,15 +65,7 @@ export default async function RootLayout({
               </div>
             </div>
             <div className="flex flex-col">
-              <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-                <MobileSidebar />
-                <div className="w-full flex-1">
-                  <SearchBar />
-                </div>
-                <ModeToggle />
-                <Notifications />
-                <UserButton />
-              </header>
+            <Header />
               <TanstackProvider>{children}</TanstackProvider>
             </div>
           </div>
