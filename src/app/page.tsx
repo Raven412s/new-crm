@@ -1,12 +1,30 @@
 import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export default async function Home() {
-    const session = await auth()
-    const user = session?.user
+type User = {
+  name: string;
+  // Add other properties as needed
+};
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-        {user?.name}
-    </main>
-  );
+export default async function Dashboard() {
+  let user: User | null = null;
+  try {
+    const session = await auth();
+    user = session?.user as User | null;
+  } catch (error) {
+    console.error("Failed to fetch user session:", error);
+    // redirect("/error"); // Or some error page
+    return null;
+  }
+
+  if (!user) {
+    // redirect("/login");
+    return null;
+  }
+
+  if (!user.name) {
+    return <div>Error: User data is incomplete.</div>;
+  }
+
+  return <div>Hello, {user.name}</div>;
 }

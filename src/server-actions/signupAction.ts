@@ -11,7 +11,7 @@ export const signupFunction =async(formData:FormData)=>{
     const password = formData.get("password") as string | undefined;
     const matchPassword = formData.get("matchPassword") as string | undefined;
 
-    if (!name || !email || !mobile || !password || !matchPassword) {
+    if (!name || !email || !mobile ) {
         throw new Error("Please provide all the fields")
     }
 

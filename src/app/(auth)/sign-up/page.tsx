@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { signupFunction } from "../../server-actions/signupAction"
+import { signupFunction } from "../../../server-actions/signupAction"
 import { useState } from "react"
 import { FaEye, FaEyeSlash } from "react-icons/fa"
 
@@ -22,7 +22,7 @@ export default function SignUpForm() {
     setPasswordVisible(!passwordVisible);
   };
   return (
-        <div className="flex items-center justify-center h-dvh bg-zinc-950/80 dark:bg-zinc-300/80">
+        <div className="flex items-center justify-center h-dvh bg-zinc-950 dark:bg-zinc-300">
              <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle className="text-2xl">Sign-Up</CardTitle>
@@ -49,7 +49,6 @@ export default function SignUpForm() {
               <Input
                 id="password"
                 type={passwordVisible ? "text" : "password"} // Toggle input type
-                required
                 name="password"
                 className="pr-10 items-center flex"
               />

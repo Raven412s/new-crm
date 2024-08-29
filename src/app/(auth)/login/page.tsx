@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,18 +11,15 @@ import { auth, signIn } from "@/auth";
 import CredentialsLogin from "@/components/client/form";
 import { redirect } from "next/navigation";
 
-
-
 export default async function LoginForm() {
+  const session = await auth();
+  const user = session?.user;
 
-    const session = await auth()
-    const user = session?.user
-
-    if (user) {
-        redirect("/")
-    }
+  if (user) {
+    redirect("/");
+  }
   return (
-    <div className="flex items-center justify-center h-dvh bg-zinc-950/80 dark:bg-zinc-300/80">
+    <div className="flex items-center justify-center h-dvh bg-zinc-950 dark:bg-zinc-300">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
@@ -33,7 +28,7 @@ export default async function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <CredentialsLogin />
+          <CredentialsLogin />
         </CardContent>
         <CardFooter>
           <p className="text-center w-full">

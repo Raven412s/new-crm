@@ -1,39 +1,42 @@
-"use client"
+"use client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import the icons
-import { loginFunction } from "../../server-actions/loginAction"; // Import the server action
+import { loginFunction } from "../../../../server-actions/loginAction"; // Import the server action
 import { toast } from "sonner";
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../../ui/button";
 
 const CredentialsLogin = () => {
-    const [passwordVisible, setPasswordVisible] = useState(false); // State to toggle password visibility
+  const [passwordVisible, setPasswordVisible] = useState(false); // State to toggle password visibility
 
-    const togglePasswordVisibility = () => {
-      setPasswordVisible(!passwordVisible);
-    };
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
 
   return (
-    <form action={async(formData:FormData)=>{
-        const email = formData.get("email") as string
-        console.log(`loginPage -> form : ${email}`)
-          const password = formData.get("password") as string
-          if (!email || !password) {
-                   toast.error("Please provide all the fields")
-              }
-          const toastId = toast.loading("logging in...")
-          const err = await loginFunction(formData)
-          if (!err) {
-              toast.success("login successfull",{id: toastId})
-          }
+    <form
+      action={async (formData: FormData) => {
+        const email = formData.get("email") as string;
+        console.log(`loginPage -> form : ${email}`);
+        const password = formData.get("password") as string;
+        if (!email || !password) {
+          toast.error("Please provide all the fields");
+        }
+        const toastId = toast.loading("logging in...");
+        const err = await loginFunction(formData);
+        if (!err) {
+          toast.success("login successfull", { id: toastId });
+        }
 
-          if (err) {
-              toast.error(String(err),{id: toastId})
-          }
+        if (err) {
+          toast.error(String(err), { id: toastId });
+        }
 
-      loginFunction(formData)
-      }} className="grid gap-4">
+        loginFunction(formData);
+      }}
+      className="grid gap-4"
+    >
       <div className="grid gap-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -63,7 +66,7 @@ const CredentialsLogin = () => {
         Sign in
       </Button>
     </form>
-  )
-}
+  );
+};
 
-export default CredentialsLogin
+export default CredentialsLogin;
