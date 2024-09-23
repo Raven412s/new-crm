@@ -1,9 +1,8 @@
 import { compare } from "bcryptjs";
 import NextAuth, { CredentialsSignin } from "next-auth";
 import CredentialProvider from "next-auth/providers/credentials";
-import { User } from "./models/userModel";
+import {User} from "./models/userModel";
 import connectDB from "./utils/DB/db";
-import { toast } from "sonner";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -35,7 +34,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         await connectDB();
 
-        console.log(`email : ${email},password : ${password}`);
+        // console.log(`email : ${email},password : ${password}`);
         const user = await User.findOne({ email }).select("+password");
 
         if (!user) {

@@ -1,233 +1,115 @@
 "use client";
-import { useState, useEffect } from "react";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch, SubmitHandler } from "react-hook-form";
+import RoleTable from "@/components/client/tables/role-table";
+import { DataTable } from "@/components/client/tables/user-table";
+import { RoleColumns } from "@/components/columns-per-table/role-columns";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { deleteByID, getAllRoles } from "@/services/roles/roles-services";
+
+import { IRole } from "@/types/roles/role-type";
+import { IUser } from "@/types/users/user-type";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
-// Define schema using Zod
-const permissionsSchema = z.object({
-  role: z.string().min(1, "Role is required"),
-  users: z.object({
-    add: z.boolean(),
-    update: z.boolean(),
-    delete: z.boolean(),
-    view: z.boolean(),
-  }),
-  products: z.object({
-    add: z.boolean(),
-    update: z.boolean(),
-    delete: z.boolean(),
-    view: z.boolean(),
-  }),
-  orders: z.object({
-    add: z.boolean(),
-    update: z.boolean(),
-    delete: z.boolean(),
-    view: z.boolean(),
-  }),
-  analytics: z.object({
-    add: z.boolean(),
-    update: z.boolean(),
-    delete: z.boolean(),
-    view: z.boolean(),
-  }),
-});
+const Roles = () => {
 
-type PermissionsFormInputs = z.infer<typeof permissionsSchema>;
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [roles, setRoles] = useState<IRole[]>([]);
+  const [page, setPage] = useState(1);
+  const [rowPerPage, setRowPerPage] = useState(10);
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState("");
 
-// Define a type for module names
-type Module = "users" | "products" | "orders" | "analytics";
-
-// Fetch roles from the database
-const fetchRoles = async (): Promise<{ name: string }[]> => {
-  const response = await fetch("/api/roles");
-  if (!response.ok) {
-    throw new Error("Failed to fetch roles");
+  interface RolesResponse {
+    users: IUser[];
+    total: number;
   }
-  return response.json();
-};
 
-// Save new role to the database
-const createRole = async (roleName: string): Promise<void> => {
-  const response = await fetch("/api/roles", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ name: roleName, permissions: {} }),
+  const { data, isLoading, isError, error, refetch } = useQuery<RolesResponse, Error>({
+    queryKey: ["roles", { page, rowPerPage, search, role }],
+    queryFn: () => getAllRoles({ page, pageSize: rowPerPage, search, role }),
+    keepPreviousData: true, // Keep previous data to ensure seamless experience during fetch
+    staleTime: 5000,
   });
-  if (!response.ok) {
-    throw new Error("Failed to create role");
-  }
-};
+  const totalPages = data ? Math.ceil(data.total / rowPerPage) : 1;
 
-const RolePermissionsPage: React.FC = () => {
-  const [roles, setRoles] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newRoleName, setNewRoleName] = useState("");
+  console.log(data)
 
-  const { register, handleSubmit, setValue, formState: { errors }, control } = useForm<PermissionsFormInputs>({
-    resolver: zodResolver(permissionsSchema),
-    defaultValues: {
-      role: "",
-      users: { add: false, update: false, delete: false, view: false },
-      products: { add: false, update: false, delete: false, view: false },
-      orders: { add: false, update: false, delete: false, view: false },
-      analytics: { add: false, update: false, delete: false, view: false },
+
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (id: string) => deleteByID(id),
+    onSuccess: (id: string) => {
+      toast.success(`Role deleted successfully!`);
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+    },
+    onError: (error: any) => {
+      toast.error(`Error: ${error.message}`);
     },
   });
-
-  const watchedPermissions = useWatch({ control });
-
-  useEffect(() => {
-    // Fetch roles when the component mounts
-    const loadRoles = async () => {
-      try {
-        const fetchedRoles = await fetchRoles();
-        setRoles(fetchedRoles.map((role) => role.name));
-      } catch (error) {
-        toast.error(`Error: ${(error as Error).message}`);
-      }
-    };
-    loadRoles();
-  }, []);
-
-  const onSubmit: SubmitHandler<PermissionsFormInputs> = async (data) => {
-    if (!selectedRole) {
-      toast.error("Please select a role.");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/roles", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: selectedRole, // Assuming selectedRole is the role ID or a unique identifier
-          permissions: {
-            users: data.users,
-            products: data.products,
-            orders: data.orders,
-            analytics: data.analytics,
-          },
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast.success("Permissions updated successfully!");
-      } else {
-        toast.error(`Error: ${result.message}`);
-      }
-    } catch (error) {
-      toast.error(`Error: ${(error as Error).message}`);
+  const handleEdit = async (id: string) => {
+    router.push(`/roles-permissions/edit/${id}`);
+  };
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this role?");
+    if (confirmed) {
+      deleteRoleMutation.mutate(id);
     }
   };
 
-  const handleRoleChange = (value: string) => {
-    setSelectedRole(value);
-    // Load permissions for the selected role if needed
-  };
+  if (isLoading) {
+    return <div className="h-screen flex justify-center items-center">Loading...</div>;
+  }
 
-  const handleAddRole = async () => {
-    try {
-      await createRole(newRoleName);
-      toast.success("Role added successfully!");
-      // Refresh roles list
-      const fetchedRoles = await fetchRoles();
-      setRoles(fetchedRoles.map((role) => role.name));
-      setNewRoleName("");
-      setIsModalOpen(false);
-    } catch (error) {
-      toast.error(`Error: ${(error as Error).message}`);
-    }
-  };
+  if (isError) {
+    return <div className="h-screen flex gap-2 flex-col justify-center items-center"><h3>Error fetching users</h3><p>{error.message}</p></div>;
+  }
 
-  const handleSelectAll = (module: Module, checked: boolean) => {
-    const permissions = {
-      add: checked,
-      update: checked,
-      delete: checked,
-      view: checked,
-    };
-    setValue(module, permissions);
-  };
+
 
   return (
-    <div className="p-5">
-      <div className="mb-5 flex items-center gap-2">
-        <Select
-          onValueChange={handleRoleChange}
-          value={selectedRole || ""}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select role" />
-          </SelectTrigger>
-          <SelectContent>
-            {roles.map((role, index) => (
-              <SelectItem key={index} value={role}>
-                {role}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogTrigger className="border border-muted rounded-lg py-2 px-6 mx-4 text-sm w-[8rem] bg-primary text-secondary font-semibold">
-            <span>Add Role</span>
-          </DialogTrigger>
-          <DialogContent>
-            <h3 className="text-lg font-semibold mb-4">Add New Role</h3>
-            <Input
-              placeholder="Enter role name"
-              value={newRoleName}
-              onChange={(e) => setNewRoleName(e.target.value)}
-            />
-            <Button onClick={handleAddRole} className="mt-4">Save Role</Button>
-          </DialogContent>
-        </Dialog>
+    <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-lg font-semibold md:text-2xl">Roles</h1>
       </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {["users", "products", "orders", "analytics"].map((module) => (
-          <div key={module} className="border p-4 flex items-center justify-between rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">{module.charAt(0).toUpperCase() + module.slice(1)}</h3>
-            <div className="flex justify-evenly items-center gap-8">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id={`select-all-${module}`}
-                  onChange={(e) => handleSelectAll(module as Module, (e.target as HTMLInputElement).checked)}
-                />
-                <Label htmlFor={`select-all-${module}`}>Select All</Label>
-              </div>
-              {["add", "update", "delete", "view"].map((permission) => (
-                <div key={permission} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`${module}-${permission}`}
-                    {...register(`${module}.${permission}` as keyof PermissionsFormInputs)}
-                  />
-                  <Label htmlFor={`${module}-${permission}`} className="capitalize">
-                    {permission}
-                  </Label>
-                </div>
-              ))}
-            </div>
+      <div
+        className="flex rounded-lg "
+        x-chunk="dashboard-02-chunk-1"
+      >
+          <DataTable
+          data={data?.roles ?? []}
+          linkToAdd="/roles-permissions/add"
+          columns={RoleColumns}
+          refetch={refetch}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+          totalPages={totalPages}
+          currentPage={page}
+          setPage={setPage}
+          rowPerPage={rowPerPage}
+          totalData={totalPages}
+          setRowPerPage={setRowPerPage}
+        />
+        {/* {roles?.length > 0 ? (
+        ) : (
+          <div className="flex flex-col items-center gap-1 text-center">
+            <h3 className="text-2xl font-bold tracking-tight">
+              You have no Roles
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              You can view all roles here as soon as you add one.
+            </p>
+            <Link href={"/roles-permissions/add"} className="mt-4">
+              <Button>Add Role</Button>
+            </Link>
           </div>
-        ))}
-        <Button type="submit">Save Permissions</Button>
-      </form>
-    </div>
+        )} */}
+      </div>
+    </main>
   );
 };
 
-export default RolePermissionsPage;
+export default Roles;

@@ -3,7 +3,10 @@ import { AddUserFormInputs, EditUserFormInputs } from "@/types/users/user-type";
 import { headers } from "@/utils/headers/headers";
 import { hash } from "bcryptjs";
 import { toast } from "sonner";
+
+
 export const onAddUserFormSubmit = async (router :any ,data: AddUserFormInputs ) => {
+    console.log("data from client--------------->", data)
     try {
         const hashedPassword = hash(data.password,10)
       const formattedData = {
@@ -17,9 +20,11 @@ export const onAddUserFormSubmit = async (router :any ,data: AddUserFormInputs )
       });
 
       if (response.ok) {
+
         toast.success("User added successfully!");
-        // You can also redirect to a different page here
-        router.push("/users")
+        // router.push("/users")
+
+        console.log("response--------------->", response.body)
 
       } else {
         const errorData = await response.json();
@@ -29,6 +34,10 @@ export const onAddUserFormSubmit = async (router :any ,data: AddUserFormInputs )
       toast.error(`Error: ${error.message}`);
     }
   };
+
+
+
+
 export const  onEditUserFormSubmit =({mutation,data}:{mutation:object,data: EditUserFormInputs})=> {
     mutation.mutate(data);
   };

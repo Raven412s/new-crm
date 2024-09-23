@@ -18,7 +18,6 @@ const CredentialsLogin = () => {
     <form
       action={async (formData: FormData) => {
         const email = formData.get("email") as string;
-        console.log(`loginPage -> form : ${email}`);
         const password = formData.get("password") as string;
         if (!email || !password) {
           toast.error("Please provide all the fields");

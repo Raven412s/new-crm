@@ -1,49 +1,79 @@
-import { Role } from '@/models/roleModel'; // Ensure you have a Role model defined
+import  Role  from '@/models/roleModel'; // Ensure you have a Role model defined
 import connectDB from '@/utils/DB/db';
 import { NextResponse } from 'next/server';
 
-// GET route to fetch all roles
-export async function GET() {
-  try {
-    await connectDB();
+export async function GET(request: Request) {
+    try {
+      await connectDB();
 
-    const roles = await Role.find(); // Adjust based on your model
-    return NextResponse.json(roles, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-  }
-}
+      // Create a URL object to access the search parameters
+      const url = new URL(request.url);
+      const search = url.searchParams.get('search') || ""; // Default to empty string if not present
+      const role = url.searchParams.get('role') || ""; // Default to empty string if not present
+      const page = url.searchParams.get('page') || "1"; // Default to "1" if not present
+      const pageSize = url.searchParams.get('pageSize') || "10"; // Default to "10" if not present
 
-// POST route to create a new role
-export async function POST(request: Request) {
-  try {
-    await connectDB();
+      // Convert pagination query parameters
+      const pageNum = parseInt(page, 10) || 1;
+      const limit = parseInt(pageSize, 10) || 10;
+      const skip = (pageNum - 1) * limit;
 
-    const { name, permissions } = await request.json();
+      // Build query object for searching and filtering
+      const query: any = {};
 
-    const role = await Role.create({ name, permissions });
+      // If there is a search term, filter by name or email
+      if (search) {
+        query["$or"] = [
+          { name: { $regex: search, $options: "i" } }, // Case-insensitive search for name
+          { email: { $regex: search, $options: "i" } } // Case-insensitive search for email
+        ];
+      }
 
-    return NextResponse.json({ success: true, role }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-  }
-}
+      // If a role is provided, filter by role
+      if (role) {
+        query["role"] = role;
+      }
 
+      // Execute the query with pagination
+      const roles = await Role.find(query).skip(skip).limit(limit);
+      const total = await Role.countDocuments(query); // Total count for pagination
 
-export async function PUT(request: Request) {
-  try {
-    await connectDB();
+      // Return users, total count, and pagination info
+      return NextResponse.json({
+        success: true,
+        roles,
+        total,
+        pageNum,
+        pageSize: limit
+      });
 
-    const { id, permissions } = await request.json();
-
-    const role = await Role.findByIdAndUpdate(id, { permissions }, { new: true });
-
-    if (!role) {
-      return NextResponse.json({ success: false, message: 'Role not found' }, { status: 404 });
+    } catch (error: any) {
+      // Handle any errors and return a 500 status
+      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
-
-    return NextResponse.json({ success: true, role }, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
-}
+
+export async function POST(request: Request) {
+    try {
+      await connectDB();
+
+      const body = await request.json();
+      const { roleName, permissions } = body;
+
+
+      // Create a new role document
+      const newRole = new Role({
+        name: roleName,
+        permission: permissions,  // Use the correct variable
+      });
+
+
+
+      // Save the new role to the database
+      await newRole.save();
+
+      return NextResponse.json({ success: true, data: newRole }, { status: 201 });
+    } catch (error: any) {
+      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    }
+  }

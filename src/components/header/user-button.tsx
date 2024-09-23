@@ -1,11 +1,13 @@
-import React from 'react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Button } from '../ui/button'
+"use client"
+import { signOut } from '@/auth'
 import { CircleUser } from 'lucide-react'
-import { auth, signOut } from '@/auth'
-import { redirect } from 'next/navigation'
+import { Button } from '../ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { useRouter } from 'next/navigation'
+import { LogoutFunction } from '@/server-actions/logoutAction'
 
 const UserButton = () => {
+    const router = useRouter()
   return (
     <DropdownMenu>
     <DropdownMenuTrigger asChild>
@@ -21,12 +23,7 @@ const UserButton = () => {
       <DropdownMenuItem>Support</DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem>
-        <form action={async () => {
-        "use server"
-        await signOut()
-        const session = await auth()
-        if (!session?.user) {redirect("/login")}
-      }}><Button type='submit' variant={'ghost'} className=''>Logout</Button></form>
+        <form action={()=>LogoutFunction()}><Button type='submit' variant={'ghost'} className=''>Logout</Button></form>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>

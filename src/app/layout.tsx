@@ -1,23 +1,15 @@
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 
-import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
-import Link from "next/link";
-import Notifications from "@/components/navbar/notifications";
 import Sidebar from "@/components/sidebar/primary-sidebar";
-import MobileSidebar from "@/components/sidebar/secondary-sidebar";
-import SearchBar from "@/components/header/searchbar";
-import UserButton from "@/components/header/user-button";
+import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 
-import TanstackProvider from "@/components/providers/tanstack-provider";
-import { ModeToggle } from "@/components/navbar/mode-toggle";
-import { User } from "@/types/users/user-type";
 import Header from "@/components/header/Header";
+import TanstackProvider from "@/components/providers/tanstack-provider";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -34,6 +26,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
 
 
 

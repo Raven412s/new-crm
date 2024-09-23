@@ -1,35 +1,12 @@
-import mongoose from 'mongoose';
+import { IRole } from '@/types/roles/role-type';
+import mongoose, { Document, Schema } from 'mongoose';
+import { array } from 'zod';
 
-const roleSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  permissions: {
-    users: {
-      add: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-      view: { type: Boolean, default: false },
-    },
-    products: {
-      add: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-      view: { type: Boolean, default: false },
-    },
-    orders: {
-      add: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-      view: { type: Boolean, default: false },
-    },
-    analytics: {
-      add: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-      view: { type: Boolean, default: false },
-    },
-  },
+
+
+const RoleSchema: Schema = new Schema({
+  name: { type: String, required: true },
+  permission: {type: [String]},
 });
 
-const Role = mongoose.models.Role || mongoose.model('Role', roleSchema);
-
-export { Role };
+export default mongoose.models.Role || mongoose.model<IRole>('Role', RoleSchema);

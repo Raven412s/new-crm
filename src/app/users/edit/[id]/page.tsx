@@ -1,6 +1,7 @@
 "use client";
 import UpdateUserForm from "@/components/client/forms/update-user-form/form";
 import { fetchUser, updateUser } from "@/services/users/user-service";
+import { getAllRoles, getRoles } from "@/services/roles/roles-services"; // Import the function to fetch roles
 import { EditUserFormInputs } from "@/types/users/user-type";
 import { onEditUserFormSubmit } from "@/utils/handlers/submit-handlers/functionList";
 import { editUserSchema } from "@/zod-schema/users/editUserSchema";
@@ -10,13 +11,9 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 
-// Define schema using Zod
-
-
-const EditUserForm = ({params}: {params: {id:string } }) => {
-    const id = params.id;
+const EditUserForm = ({ params }: { params: { id: string } }) => {
+  const id = params.id;
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -31,6 +28,12 @@ const EditUserForm = ({params}: {params: {id:string } }) => {
     enabled: !!id,
   });
 
+  // Fetch roles using React Query
+  const { data: roles, isLoading: rolesLoading, isError: rolesError, error: rolesErrorObject } = useQuery({
+    queryKey: ["roles"],
+    queryFn:async()=>await getRoles(),
+  });
+
   // Set form values once data is fetched
   useEffect(() => {
     if (data) {
@@ -41,9 +44,9 @@ const EditUserForm = ({params}: {params: {id:string } }) => {
     }
   }, [data, setValue]);
 
-  // Mutation for updating user data
-  const mutation = useMutation({
-    mutationFn: (data: EditUserFormInputs) => updateUser({id, data }),
+ // Mutation for updating user data
+ const mutation = useMutation({
+    mutationFn: (formData: EditUserFormInputs) => updateUser({ id, data: formData }),
     onSuccess: () => {
       toast.success("User updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["users"] }); // Invalidate the users query to refetch data
@@ -54,24 +57,33 @@ const EditUserForm = ({params}: {params: {id:string } }) => {
     },
   });
 
-  const onSubmit = (data: EditUserFormInputs) => onEditUserFormSubmit({mutation,data});
+  const onSubmit = (formData: EditUserFormInputs) => {
+    const selectedRole = formData.role || data?.role; // Retrieve the selected role or use the existing one
+    console.log("formData******************* ", formData)
+    const updatedData = {
+      ...formData,
+      role: selectedRole,
+    };
 
-  if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>Error: {error?.message}</p>;
+    onEditUserFormSubmit({ mutation, data: updatedData });
+  };
 
-  // Accessing mutation status
+  if (isLoading || rolesLoading) return <p>Loading...</p>;
+  if (isError || rolesError) return <p>Error: {error?.message || rolesErrorObject?.message}</p>;
+
   const isMutationLoading = mutation.status === "pending";
 
   return (
     <div>
-        <UpdateUserForm
+      <UpdateUserForm
         register={register}
         handleSubmit={handleSubmit(onSubmit)}
-        setValue={setValue}
         errors={errors}
+        roles={roles.data}
         data={data}
+        setValue={setValue}
         isMutationLoading={isMutationLoading}
-        />
+      />
     </div>
   );
 };

@@ -4,5 +4,5 @@ export const editUserSchema = z.object({
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Invalid email address"),
     mobile: z.string().regex(/^\d{10}$/, "Invalid mobile number"),
-    role: z.enum(["user", "admin"]).optional(),
+    role: z.string().optional(),
   });
